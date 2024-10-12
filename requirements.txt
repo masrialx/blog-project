@@ -2,7 +2,7 @@ alembic==1.13.2
 asgiref==3.8.1
 blinker==1.8.2
 click==8.1.7
-cryptography>=41.0.5,<44.0  # Adjusted version range
+cryptography==41.0.5  # Specify a version
 Django==5.1
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
