@@ -7,6 +7,10 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ['id', 'name']
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
 
 class BlogPostSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, required=False)
@@ -22,44 +26,42 @@ class BlogPostSerializer(serializers.ModelSerializer):
         post.author = self.context['request'].user  # Set the author to the current user
         post.save()
 
-        # Handle the ManyToMany relationship for tags
         for tag in tags_data:
             tag_instance, created = Tag.objects.get_or_create(**tag)
             post.tags.add(tag_instance)
 
         return post
 
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name']
-
+from rest_framework import serializers
+from .models import Comment  # Assume Comment is your model
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ['id', 'post', 'content', 'user']
+        read_only_fields = ['user']  # Mark user as read-only
 
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user  # Automatically set the user
+        return super().create(validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
 
-
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
-        extra_kwargs = {'password': {'write_only': True}}  # Make password write-only
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User(**validated_data)
         user.set_password(validated_data['password'])  # Hash the password
+        user.is_active = False  # New users are inactive by default
         user.save()
         return user
-
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:

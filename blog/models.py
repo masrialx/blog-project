@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 import markdown
 from django.utils.safestring import mark_safe
 
@@ -15,8 +16,6 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
-from django.utils import timezone
-
 class BlogPost(models.Model):
     title = models.CharField(max_length=255, unique=True)
     content = models.TextField()
@@ -24,7 +23,7 @@ class BlogPost(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
-    published_date = models.DateTimeField(null=True, blank=True)  # Add this line
+    published_date = models.DateTimeField(null=True, blank=True)
     is_published = models.BooleanField(default=False)
     likes = models.ManyToManyField(User, related_name="post_likes", blank=True)
     image = models.ImageField(upload_to='blog_images/', blank=True, null=True)
