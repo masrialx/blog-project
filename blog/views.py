@@ -1,3 +1,4 @@
+from datetime import timezone
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -5,10 +6,12 @@ from .models import BlogPost, Category, Tag, Comment, UserProfile
 from .serializers import BlogPostSerializer, CategorySerializer, TagSerializer, CommentSerializer, UserRegistrationSerializer, UserProfileSerializer
 from django.contrib.auth.models import User
 
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 class BlogPostViewSet(viewsets.ModelViewSet):
     queryset = BlogPost.objects.all()
     serializer_class = BlogPostSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Read-only for unauthenticated users
 
     def perform_create(self, serializer):
         post = serializer.save(author=self.request.user)
@@ -37,6 +40,8 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             instance.delete()
         else:
             raise permissions.PermissionDenied("You do not have permission to delete this post.")
+
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
