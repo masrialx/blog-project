@@ -42,7 +42,7 @@ The Blogging Platform API is a RESTful API built with Django and Django REST Fra
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/masrialx/blogging-platform.git
+   git clone https://github.com/masrialx/blog-project
    cd blogging-platform
    ```
 
