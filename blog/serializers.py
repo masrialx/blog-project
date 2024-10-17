@@ -1,19 +1,22 @@
 from rest_framework import serializers
 from .models import BlogPost, Category, Tag, Comment, UserProfile
 from django.contrib.auth.models import User
+from rest_framework.exceptions import ValidationError
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name']
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
 
+
 class BlogPostSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True, required=False)
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, required=False)
 
     class Meta:
         model = BlogPost
@@ -23,32 +26,34 @@ class BlogPostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         post = BlogPost(**validated_data)
-        post.author = self.context['request'].user  # Set the author to the current user
+        post.author = self.context['request'].user
         post.save()
-
-        for tag in tags_data:
-            tag_instance, created = Tag.objects.get_or_create(**tag)
-            post.tags.add(tag_instance)
-
+        post.tags.set(tags_data)
         return post
 
-from rest_framework import serializers
-from .models import Comment  # Assume Comment is your model
+    def update(self, instance, validated_data):
+        tags_data = validated_data.pop('tags', [])
+        instance = super().update(instance, validated_data)
+        instance.tags.set(tags_data)
+        return instance
+
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'post', 'content', 'user']
-        read_only_fields = ['user']  # Mark user as read-only
+        read_only_fields = ['user']
 
     def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user  # Automatically set the user
+        validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,10 +63,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User(**validated_data)
-        user.set_password(validated_data['password'])  # Hash the password
+        user.set_password(validated_data['password'])
         user.is_active = False  # New users are inactive by default
         user.save()
         return user
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
